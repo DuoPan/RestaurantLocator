@@ -14,6 +14,8 @@ class WelcomeController: UIViewController {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        //Thread.sleep(forTimeInterval: 3.0)
+        self.performSegue(withIdentifier: "beginApp", sender: "DuoPan")
     }
 
     override func didReceiveMemoryWarning() {

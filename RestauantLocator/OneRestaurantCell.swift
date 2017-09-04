@@ -10,6 +10,9 @@ import UIKit
 
 class OneRestaurantCell: UITableViewCell {
 
+    @IBOutlet weak var labelValue: UILabel!
+    @IBOutlet weak var labelName: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

@@ -10,6 +10,12 @@ import UIKit
 
 class OneCategoryCell: UITableViewCell {
 
+    @IBOutlet weak var imageRestaurant: UIImageView!
+    @IBOutlet weak var labelRating: UILabel!
+    @IBOutlet weak var labelDate: UILabel!
+    @IBOutlet weak var labelLocation: UILabel!
+    @IBOutlet weak var labelName: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

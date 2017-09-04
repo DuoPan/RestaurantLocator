@@ -12,15 +12,16 @@ class TabBarController: UITabBarController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        
+        //self.tabBarItem.image = UIImage.init(named:"item1")?.withRenderingMode(.alwaysOriginal)
+      //  self.tabBarItem.selectedImage = UIImage.init(named:"item1")?.withRenderingMode(.alwaysOriginal)
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
+  
 
     /*
     // MARK: - Navigation
