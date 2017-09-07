@@ -21,22 +21,27 @@ import CoreData
 
 class CategoriesController: UITableViewController, UISearchBarDelegate, addCategoryDelegate {
     
+    // all categories entities
     var categoryList: [Category]?
+    // all categories to be shown, changed when search, sort
     var filteredCategoryList: [Category]?
+    
     var managedContext: NSManagedObjectContext?
     var appDelegate: AppDelegate?
     
     @IBOutlet var searchBar: UISearchBar!
     @IBOutlet weak var sortBtn: UIBarButtonItem!
+    
+    // before free drag sort, the button is blue, when doing free drag sort, it become red, click again, back to blue and finish sort.
     var btnColor :UIColor?
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        //make the view beautiful
         self.tableView.separatorStyle = .singleLine
         self.tableView.separatorColor = UIColor.black
         self.tableView.separatorEffect = UIBlurEffect(style: .light)
-       
         //self.tableView.backgroundColor = UIColor(patternImage: #imageLiteral(resourceName: "lufei"))
         
         btnColor = sortBtn.tintColor
@@ -55,7 +60,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
         }
     }
 
-    // after adding/editing, save and back to this view, it will refresh
+    // after adding/editing, save and back to this view, it will be called
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
         self.tableView.reloadData()
@@ -67,6 +72,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
 
     func fetchAllCategories() {
         let categoryFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Category")
+        // fetch by attribute: order ascending
         let sortDescriptor = NSSortDescriptor(key: "order", ascending:true)
         categoryFetch.sortDescriptors = [sortDescriptor]
         do {
@@ -81,7 +87,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if(searchText == "") {
             filteredCategoryList = categoryList
-            // hide keyboard on real iPhone
+            // another way to hide keyboard on real iPhone
             // reference: https://stackoverflow.com/questions/4190459/dismissing-keyboard-from-uisearchbar-when-the-x-button-is-tapped/43018816
             searchBar.perform(#selector(self.resignFirstResponder), with: nil, afterDelay: 0.1)
         }
@@ -94,19 +100,19 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
+        //  the number of sections
         return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
+        // the number of rows
         if let count = filteredCategoryList?.count {
             return count
         }
         return 0;
     }
 
-    
+    // each cell to show name, color and image
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoriesCell", for: indexPath) as! CategoriesCell
         let category = filteredCategoryList![indexPath.row]
@@ -124,12 +130,13 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
     }
     
     // reference : https://www.youtube.com/channel/UCYeN6lt7_RCTxKdTcFv_tSQ
+    // when slip left, two button will be shown: delete and edit
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         let actionDel = UITableViewRowAction(style: .destructive, title: "Delete") { (_, indexPath) in
-            
+            // get the category that user operating
             let deleteCategory = self.filteredCategoryList![indexPath.row]
             
-            // remove all restaurants belong to this category from core data
+            // get all restaurants belong to this category from core data
             let restaurantFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Restaurant")
             restaurantFetch.predicate = NSPredicate(format: "category.name = %@", deleteCategory.name!)
             var deleteRestaurants : [Restaurant] = []
@@ -138,19 +145,20 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
             } catch {
                 fatalError("Failed to fetch restaurants: \(error)")
             }
+            // then remove these restaurants
             while deleteRestaurants.count > 0 {
                 let deleteRestaurant = deleteRestaurants[0]
                 self.managedContext?.delete(deleteRestaurant as NSManagedObject)
                 deleteRestaurants.remove(at: 0)
             }
             
-            // remove a category from core data
+            // remove this category from core data
             self.managedContext?.delete(deleteCategory as NSManagedObject)
             
             
             self.appDelegate?.saveContext()
             
-            // remove a category from two lists
+            // remove this category from two lists
             self.filteredCategoryList?.remove(at: indexPath.row)
             for i in 0...(self.categoryList?.count)! - 1{
                 if self.categoryList?[i].name == deleteCategory.name{
@@ -163,6 +171,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
             tableView.deleteRows(at: [indexPath], with: .fade)
         }
         
+        // when click edit button, go to the the other view
         let actionEdit = UITableViewRowAction(style: .default, title: "E d i t") { (_, _) in
             self.performSegue(withIdentifier: "editCategory", sender: indexPath.row )
         }
@@ -172,6 +181,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
     }
     
     // Override to support rearranging the table view.
+    // free drag sort
     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
         if fromIndexPath == to{
             return
@@ -181,12 +191,14 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
         var begin = fromIndexPath.row
         let end = to.row
         let temp = filteredCategoryList?[begin]
+        
+        // move a category from top to bottom
         if begin < end {
             while begin < end{
                 filteredCategoryList?[begin] = (filteredCategoryList?[begin + 1])!
                 begin += 1
             }
-        }
+        }// move a category from bottom to top
         else if begin > end {
             while begin > end{
                 filteredCategoryList?[begin] = (filteredCategoryList?[begin - 1])!
@@ -194,6 +206,8 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
             }
         }
         filteredCategoryList?[end] = temp!
+        
+        // save new orders in two lists
         categoryList = filteredCategoryList
         
         self.tableView.reloadData()
@@ -215,6 +229,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
             saveOrders()
             return
         }
+        // set menu
         let menu = UIAlertController(title: "Sort The List", message: "Please choose any one", preferredStyle: .actionSheet)
         let option1 = UIAlertAction(title: "Name from A", style: .default){ (_) in self.sortFromA(flag: true)}
         let option2 = UIAlertAction(title: "Name from Z", style: .default){ (_) in self.sortFromA(flag: false)}
@@ -227,6 +242,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
         self.present(menu, animated: true, completion: nil)
     }
     
+    // save attribute order in core data
     func saveOrders(){
         var index = 0
         for category in self.categoryList! {
@@ -291,6 +307,7 @@ class CategoriesController: UITableViewController, UISearchBarDelegate, addCateg
     }
     
     // MARK: - Populate Data
+    // same methods as lecture notes
     func createDefaultItems() {
         
         let pizza = createManagedCategory(name: "Pizza", colorR: 0, colorG: 0, colorB: 0, logo: UIImagePNGRepresentation(#imageLiteral(resourceName: "pizza"))! as NSData, order: 2)

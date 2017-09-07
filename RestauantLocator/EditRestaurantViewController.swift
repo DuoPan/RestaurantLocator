@@ -14,6 +14,7 @@
  * User can choose whether to notification or not, and set radius.
  * All the changes will show when page open
  * Automatically save latitude and longitude
+ * Different constrains in landscape
  */
 
 import UIKit
@@ -30,12 +31,15 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
     @IBOutlet var radiusLabel: UILabel!
  
     var existRestaurants: [Restaurant]?
-    var restaurant: Restaurant?
+    var restaurant: Restaurant? // the restaurant to be edit
     
     var managedContext: NSManagedObjectContext?
     var appDelegate: AppDelegate?
     
+    // make sure address string has been translate to lat and lon
+    // because geocoder method seems doing asyn
     var findLocation:Bool?
+    
     var latitude:Double?
     var longitude:Double?
     
@@ -57,6 +61,7 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
         self.labelName.delegate = self
         self.labelRating.delegate = self
         
+        // display the restaurant attributes which to be edited
         labelName.text = restaurant?.name
         labelLocation.text = restaurant?.address
         labelRating.text = String(restaurant!.rating)
@@ -64,19 +69,15 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
         radiusLabel.text = String(restaurant!.radius)
         self.latitude = restaurant!.latitude
         self.longitude = restaurant!.longitude
+        notificationSwich.isOn = (restaurant?.isNotify)!
         
         appDelegate = UIApplication.shared.delegate as? AppDelegate
         managedContext = appDelegate!.persistentContainer.viewContext
-        
-        // reference: https://stackoverflow.com/questions/32586833/swift-uiswitch-how-to-implement-a-delegate-listener
-        notificationSwich.addTarget(self, action: #selector(self.notificationChanged(switchState:)), for: UIControlEvents.valueChanged)
-        notificationSwich.isOn = (restaurant?.isNotify)!
-        
+
+        // address doesnt translate to lon and lat now
         self.findLocation = false
     }
-    
-    func notificationChanged(switchState: UISwitch) {
-    }
+
     
     @IBAction func radiusSlider(_ sender: UISlider) {
         radiusLabel.text = String(Int(sender.value))
@@ -96,9 +97,12 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
     /*
      // MARK: - textfield limit words
      */
+    // validations
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         if labelName == textField {
+            // calculate name length no matter input or delete a char
             let proposeLength = (textField.text?.characters.count)! - range.length + string.characters.count
+            // name length can not over 30, otherwise a prompt dialog will pop up
             if proposeLength > 30 {
                 let alertController = UIAlertController(title: "30 Words Limit!",message: nil, preferredStyle: .alert)
                 self.present(alertController, animated: true, completion: nil)
@@ -110,9 +114,11 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
         }
         if labelRating == textField {
             let proposeLength = (textField.text?.characters.count)! - range.length + string.characters.count
+            // rating can only 1 char
             if proposeLength > 1 {
                 return false
             }
+            // rating can only be 1-5
             if string != "5" && string != "4" && string != "3" && string != "2" && string != "1" && string != "" {
                 // prompt the input format
                 let alertController = UIAlertController(title: "Only accept 1-5!",message: nil, preferredStyle: .alert)
@@ -153,7 +159,7 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
     }
     
     func getLatLon() {
-        // get lat and long by location String
+        // get lat and lon by location String
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(self.labelLocation.text, completionHandler:{
             (placemarks, error) in
@@ -165,7 +171,7 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
             if let p = placemarks?[0]{
                 self.latitude = p.location!.coordinate.latitude
                 self.longitude = p.location!.coordinate.longitude
-                // handle asyn, make sure this method finish then save
+                // handle asyn, make sure this method finish before save
                 self.findLocation = true
                 self.saveEditRestaurant("")
             } else {
@@ -175,6 +181,7 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
         })
     }
     
+    // click save button
     @IBAction func saveEditRestaurant(_ sender: Any) {
         // check if input all exist
         if labelName.text == "" {
@@ -187,7 +194,8 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
         }
         else{
             if findLocation == false {
-                self.getLatLon()
+                // translation to lat and lon first
+                self.getLatLon() // this method will call saveEditRestaurant method again, and goto other path
                 return
             }
         }
@@ -207,6 +215,7 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
         }
         // update restaurant into core data
         let restaurantFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Restaurant")
+        // restaurant address is unique in core data
         restaurantFetch.predicate = NSPredicate(format: "address = %@", (self.restaurant?.address!)!)
         var editRestaurant :[Restaurant]?
         do {
@@ -230,6 +239,7 @@ class EditRestaurantViewController: UIViewController, UITextViewDelegate, UIText
 
     }
     
+    // pop up a dialog to show message
     func showMessage(msg:String){
         let alertController = UIAlertController(title: msg, message: nil, preferredStyle: .alert)
         self.present(alertController, animated: true, completion: nil)

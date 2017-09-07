@@ -13,6 +13,7 @@
    different restaurants can not be the same location
  * User can choose whether to notification or not
  * Automatically save latitude and longitude
+ * Different constrains in landscape
  */
 
 
@@ -20,6 +21,7 @@ import UIKit
 import CoreData
 import CoreLocation
 
+// call by OneCategoryController
 protocol addRestaurantDelegate {
     func addRestaurant(restaurant : Restaurant)
 }
@@ -34,13 +36,16 @@ class AddRestaurantController: UIViewController, UITextViewDelegate, UITextField
     @IBOutlet weak var notificationSwitch: UISwitch!
     @IBOutlet var radiusLabel: UILabel!
 
-    var category:String?
+    var category:String? // the category can not choose, because I design add restaurant in a specific catogory
     var managedContext: NSManagedObjectContext?
     var appDelegate: AppDelegate?
     var mydelegate : addRestaurantDelegate?
     var existRestaurants: [Restaurant]?
     var latitude:Double?
     var longitude:Double?
+    
+    // make sure address string has been translate to lat and lon
+    // because geocoder method seems doing asyn
     var findLocation:Bool?
     
     override func viewDidLoad() {
@@ -111,7 +116,9 @@ class AddRestaurantController: UIViewController, UITextViewDelegate, UITextField
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         // restaurant name is limit to 30 chars
         if labelName == textField {
+            // calculate name length no matter input or delete a char
             let proposeLength = (textField.text?.characters.count)! - range.length + string.characters.count
+            // name length can not over 30, otherwise a prompt dialog will pop up
             if proposeLength > 30 {
                 let alertController = UIAlertController(title: "30 Words Limit!",message: nil, preferredStyle: .alert)
                 self.present(alertController, animated: true, completion: nil)
@@ -124,6 +131,7 @@ class AddRestaurantController: UIViewController, UITextViewDelegate, UITextField
         // restaurant rating can only be 1-5
         if labelRating == textField {
             let proposeLength = (textField.text?.characters.count)! - range.length + string.characters.count
+            // rating can only 1 char
             if proposeLength > 1 {
                 return false
             }
@@ -204,7 +212,8 @@ class AddRestaurantController: UIViewController, UITextViewDelegate, UITextField
         }
         else{
             if findLocation == false {
-                self.getLatLon()
+                // translation to lat and lon first
+                self.getLatLon()// this method will call saveEditRestaurant method again, and goto other path
                 return
             }
         }
@@ -257,6 +266,7 @@ class AddRestaurantController: UIViewController, UITextViewDelegate, UITextField
         self.navigationController?.popViewController(animated: true)
     }
     
+    // pop up a dialog to show message
     func showMessage(msg:String){
         let alertController = UIAlertController(title: msg, message: nil, preferredStyle: .alert)
         self.present(alertController, animated: true, completion: nil)
@@ -270,6 +280,7 @@ class AddRestaurantController: UIViewController, UITextViewDelegate, UITextField
         self.view.endEditing(true)
     }
     
+    // show slider value on the label beside
     @IBAction func radiusSlider(_ sender: UISlider) {
         radiusLabel.text = String(Int(sender.value))
     }

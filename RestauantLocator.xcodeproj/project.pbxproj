@@ -121,9 +121,6 @@
 		24484FBF1F36D23F0035795B = {
 			isa = PBXGroup;
 			children = (
-				24240DE81F4BFAF0007D98A0 /* remoteplace.gpx */,
-				24240DE61F4BF7CC007D98A0 /* home.gpx */,
-				24240DE41F4A9202007D98A0 /* monashCau.gpx */,
 				24484FCA1F36D23F0035795B /* RestauantLocator */,
 				24484FDF1F36D2400035795B /* RestauantLocatorTests */,
 				24484FEA1F36D2400035795B /* RestauantLocatorUITests */,
@@ -161,6 +158,9 @@
 				2448502D1F3979850035795B /* OneCategoryController.swift */,
 				244850361F3B3E270035795B /* OneRestaurantCell.swift */,
 				244850311F39B6040035795B /* OneRestaurantController.swift */,
+				24240DE81F4BFAF0007D98A0 /* remoteplace.gpx */,
+				24240DE61F4BF7CC007D98A0 /* home.gpx */,
+				24240DE41F4A9202007D98A0 /* monashCau.gpx */,
 				24484FD21F36D23F0035795B /* Assets.xcassets */,
 				24484FD41F36D23F0035795B /* LaunchScreen.storyboard */,
 				24484FD71F36D23F0035795B /* Info.plist */,

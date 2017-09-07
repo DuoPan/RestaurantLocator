@@ -9,7 +9,7 @@
 import UIKit
 
 class OneRestaurantCell: UITableViewCell {
-
+// reuse these  two labels
     @IBOutlet weak var labelValue: UILabel!
     @IBOutlet weak var labelName: UILabel!
     

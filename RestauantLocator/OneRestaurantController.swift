@@ -20,9 +20,8 @@ import CoreLocation
 
 class OneRestaurantController: UITableViewController, CLLocationManagerDelegate, MKMapViewDelegate {
 
-    var restaurant: Restaurant?
-    var categoryName: String?
-    var existRestaurants: [Restaurant]?
+    var restaurant: Restaurant? // this restaurant to be shown
+    var existRestaurants: [Restaurant]? // when click edit button, it will pass to that controller
     
     
     @IBOutlet var mapView: MKMapView!
@@ -64,9 +63,10 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
     }
  
     func showMap(){
+        // set annotation
         self.location = FencedAnnotation(newTitle: self.restaurant!.name!, newSubtitle: "Distance: " + self.computeDistance(), lat: restaurant!.latitude, long: restaurant!.longitude)
         self.mapView.addAnnotation(self.location!)
-        
+        // set notification circle
         self.circle = MKCircle(center: (self.location?.coordinate)!, radius: Double((self.restaurant?.radius)!))
         self.geoLocation = CLCircularRegion(center: self.location!.coordinate, radius: Double((self.restaurant?.radius)!), identifier: (self.location?.title!)!)
         
@@ -80,12 +80,13 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
         else{
             print("Close GeoFeching")
             self.geoLocation!.notifyOnEntry = false
+            // get monitored regions and stop them one by one
             for var region in self.locationManager.monitoredRegions
             {
                 self.locationManager.stopMonitoring(for: region)
             }
         }
-        
+        // set perspective
         self.mapView.setRegion(MKCoordinateRegionMakeWithDistance(self.location!.coordinate,2000,2000), animated: true)
         
     }
@@ -108,13 +109,14 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
         
     }
     
-    
+    // geofence
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         let alert = UIAlertController(title: "You are now near", message: self.location?.title, preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
+    // update realtime user location
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let loc = locations.last
         currentLocation = loc?.coordinate
@@ -122,7 +124,7 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
         location?.subtitle = "Distance: " + computeDistance()
     }
     
-    // highlight circle
+    // add highlight circle
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         assert(overlay is MKCircle, "overlay must be circle")
         
@@ -133,27 +135,13 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
         return circleRenderer
     }
     
+    // each time comes to this page, it will run
+    // when edit this restaurant, the changes will be shown immediately
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
         titleImageView?.image = UIImage(data: restaurant!.logo! as Data)
         self.tableView.reloadData()
-        // first time load
-//        if self.circle == nil {
-//            
-//        }
-//        else{
-//            if (self.restaurant?.isNotify)! {
-//                self.mapView.remove(self.circle!)
-//                self.circle = MKCircle(center: (self.location?.coordinate)!, radius: Double((self.restaurant?.radius)!))
-//                self.geoLocation = CLCircularRegion(center: self.location!.coordinate, radius: Double((self.restaurant?.radius)!), identifier: (self.location?.title!)!)
-//                self.mapView.add(self.circle!)
-//                self.geoLocation!.notifyOnEntry = true
-//            }
-//            else{
-//                self.mapView.remove(self.circle!)
-//                self.geoLocation!.notifyOnEntry = false
-//            }
-//        }
+
         let allAnnotations = self.mapView.annotations
         if allAnnotations.count != 0 {
             self.mapView.removeAnnotations(allAnnotations)
@@ -184,7 +172,7 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
         return 6
     }
 
-    
+    // how each cell looks like
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "RestaurantCell", for: indexPath) as! OneRestaurantCell
 
@@ -198,7 +186,7 @@ class OneRestaurantController: UITableViewController, CLLocationManagerDelegate,
             cell.labelValue.text = restaurant!.address
         case 2:
             cell.labelName.text = "Category: "
-            cell.labelValue.text = categoryName
+            cell.labelValue.text = restaurant!.category?.name
         case 3:
             cell.labelName.text = "Rating: "
             cell.labelValue.text = String(restaurant!.rating) + " Stars"

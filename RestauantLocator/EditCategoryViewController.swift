@@ -13,7 +13,8 @@
  * Change navigation bar default text. ("back" to "cancel")
  * Validation with prompt: Name must not be entered and not existed. Image must be choosen. Default color.
  * Running in real phone, keyboard can show and hide.
- * All the changes will show immediately
+ * All the changes will show immediately when click save button
+* Different constrains in landscape
  */
 
 
@@ -33,11 +34,47 @@ class EditCategoryViewController: UIViewController, UIImagePickerControllerDeleg
     @IBOutlet var sliderR: UISlider!
 
     @IBOutlet var labelColor: UILabel!
-    var category : Category?
-    var categories:[Category]?
+    var category : Category? //the category which to be edited
+    var categories:[Category]? // all existed categories
     var managedContext: NSManagedObjectContext?
     var appDelegate: AppDelegate?
 
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Change words on Navigation bar back item
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(backToPrevious))
+        
+        // show the category's values before editing
+        labelName.text = category?.name
+        imageView.image = UIImage(data:  category?.logo! as! Data)
+        
+        appDelegate = UIApplication.shared.delegate as? AppDelegate
+        managedContext = appDelegate?.persistentContainer.viewContext
+        
+        sliderR.value = (category?.colorR)!
+        sliderG.value = (category?.colorG)!
+        sliderB.value = (category?.colorB)!
+        
+        labelR.text = String(Int(sliderR.value))
+        labelG.text = String(Int(sliderG.value))
+        labelB.text = String(Int(sliderB.value))
+        
+        labelColor.textColor = UIColor(red: CGFloat(sliderR.value / 255), green: CGFloat(sliderG.value / 255), blue: CGFloat(sliderB.value / 255), alpha: 1)
+    }
+    
+    // set leftBarButtonItem to have a go back function
+    func backToPrevious(){
+        self.navigationController!.popViewController(animated: true)
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    // in real phone use camera, otherwise use photo
     @IBAction func chooseImage(_ sender: Any) {
         let picker = UIImagePickerController()
         if(UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.camera)) {
@@ -60,52 +97,14 @@ class EditCategoryViewController: UIViewController, UIImagePickerControllerDeleg
         dismiss(animated: true, completion: nil)
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Change words on Navigation bar back item
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(backToPrevious))
-      
-        labelName.text = category?.name
-        imageView.image = UIImage(data:  category?.logo! as! Data)
-        
-        appDelegate = UIApplication.shared.delegate as? AppDelegate
-        managedContext = appDelegate?.persistentContainer.viewContext
-        
-        sliderR.value = (category?.colorR)!
-        sliderG.value = (category?.colorG)!
-        sliderB.value = (category?.colorB)!
-        
-        labelR.text = String(Int(sliderR.value))
-        labelG.text = String(Int(sliderG.value))
-        labelB.text = String(Int(sliderB.value))
-    
-        labelColor.textColor = UIColor(red: CGFloat(sliderR.value / 255), green: CGFloat(sliderG.value / 255), blue: CGFloat(sliderB.value / 255), alpha: 1)
-    }
-    
-    // set leftBarButtonItem to have a go back function
-    func backToPrevious(){
-        self.navigationController!.popViewController(animated: true)
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-
-    
+    // when click save button
     @IBAction func saveEdit(_ sender: Any) {
         // check if input all exist
         if labelName.text == "" {
             showMessage(msg: "Please enter a category name")
             return
         }
-        // can change the name or not ,but the name can not be the same as others
+        // can change the name, but the name can not be the same as others
         for i in 0...(categories?.count)!-1{
             // name exist in all names of cateogries
             if ((categories?[i].name)!.lowercased() == labelName.text?.lowercased()) {
@@ -140,6 +139,7 @@ class EditCategoryViewController: UIViewController, UIImagePickerControllerDeleg
         
     }
     
+    // pop up a dialog to show message
     func showMessage(msg:String){
         let alertController = UIAlertController(title: msg, message: nil, preferredStyle: .alert)
         self.present(alertController, animated: true, completion: nil)
@@ -153,8 +153,8 @@ class EditCategoryViewController: UIViewController, UIImagePickerControllerDeleg
         self.view.endEditing(true)
     }
 
-    // reference: range of rgb https://stackoverflow.com/questions/8023916/how-to-initialize-uicolor-from-rgb-values-properly
     
+    // reference: range of rgb is 0-1, not 0-255. https://stackoverflow.com/questions/8023916/how-to-initialize-uicolor-from-rgb-values-properly
     @IBAction func changeR(_ sender: UISlider) {
         labelR.text = String(Int(sender.value))
         labelColor.textColor = UIColor(red: CGFloat(sliderR.value / 255), green: CGFloat(sliderG.value / 255), blue: CGFloat(sliderB.value / 255), alpha: 1)

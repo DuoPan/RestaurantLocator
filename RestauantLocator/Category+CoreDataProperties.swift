@@ -6,9 +6,6 @@
 //  Copyright © 2017 duo pan. All rights reserved.
 //
 
-// colorR, G, B are used for the textcolor of category name
-// order is used for saving sorting results.
-
 
 import Foundation
 import CoreData
@@ -22,10 +19,12 @@ extension Category {
 
     @NSManaged public var name: String?
     @NSManaged public var logo: NSData?
+    // colorR, G, B are used for the textcolor of category name
     @NSManaged public var colorR: Float
     @NSManaged public var colorG: Float
     @NSManaged public var colorB: Float
     @NSManaged public var members: NSSet?
+    // order is used for saving sorting results.
     @NSManaged public var order: Int32
 
 }

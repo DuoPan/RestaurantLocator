@@ -6,6 +6,10 @@
 //  Copyright © 2017 duo pan. All rights reserved.
 //
 
+// Add core data codes follow by tutorial notes.
+
+
+
 import UIKit
 import CoreData
 

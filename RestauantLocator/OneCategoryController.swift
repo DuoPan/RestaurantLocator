@@ -23,8 +23,8 @@ import CoreData
 class OneCategoryController: UITableViewController, UISearchBarDelegate, addRestaurantDelegate {
    
     var categoryName: String?
-    var restaurants: [Restaurant]?
-    var filteredRestaurants: [Restaurant]?
+    var restaurants: [Restaurant]? // all restaurants in core data
+    var filteredRestaurants: [Restaurant]? // all restaurants to be shown
     var managedContext: NSManagedObjectContext?
     var appDelegate: AppDelegate?
     
@@ -57,6 +57,7 @@ class OneCategoryController: UITableViewController, UISearchBarDelegate, addRest
     }
     
     func fetchRestaurants() {
+        // only fetch restaurants belong to this category
         let restaurantFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Restaurant")
         restaurantFetch.predicate = NSPredicate(format: "category.name = %@", categoryName!)
         let sortDescriptor = NSSortDescriptor(key: "order", ascending:true)
@@ -102,7 +103,7 @@ class OneCategoryController: UITableViewController, UISearchBarDelegate, addRest
         return 0
     }
 
-    
+    // how each cell show
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "OneCategoryCell", for: indexPath) as! OneCategoryCell
         let restaurant = filteredRestaurants![indexPath.row]
@@ -129,6 +130,7 @@ class OneCategoryController: UITableViewController, UISearchBarDelegate, addRest
 
     
     // Override to support editing the table view.
+    // support left slip
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             // remove a category from core data
@@ -154,12 +156,14 @@ class OneCategoryController: UITableViewController, UISearchBarDelegate, addRest
   
     
     // Override to support rearranging the table view.
+    // free drag sort
     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
         if fromIndexPath == to{
             return
         }
         
         //sort filter list and restaurant list
+        // from top to bottom
         var begin = fromIndexPath.row
         let end = to.row
         let temp = filteredRestaurants?[begin]
@@ -169,6 +173,7 @@ class OneCategoryController: UITableViewController, UISearchBarDelegate, addRest
                 begin += 1
             }
         }
+        // from bottom to top
         else if begin > end {
             while begin > end{
                 filteredRestaurants?[begin] = (filteredRestaurants?[begin - 1])!
@@ -298,7 +303,6 @@ class OneCategoryController: UITableViewController, UISearchBarDelegate, addRest
             let controller = segue.destination as! OneRestaurantController
             let selectedRestaurant = filteredRestaurants![(tableView.indexPathForSelectedRow?.row)!]
             controller.restaurant = selectedRestaurant
-            controller.categoryName = self.categoryName
             controller.existRestaurants = self.restaurants
         }
         if (segue.identifier == "addRestaurant") {

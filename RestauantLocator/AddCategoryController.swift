@@ -10,19 +10,21 @@
  * User can choose image from photo library, enter name in text filed, and select color by sliders (RGB)
  * Preview of text color.
  * Change navigation bar default text. ("back" to "cancel")
- * Validation with prompt: Name must not be entered and not existed. Image must be choosen. Default color.
+ * Validation with prompt: Name must not be entered and not existed. Image must be choosen. Have Default color.
  * Running in real phone, keyboard can show and hide.
+ * Different constrains in landscape
  */
 
 import UIKit
 import CoreData
 
+// called by CategoryController
 protocol addCategoryDelegate {
     func addCategory(category : Category)
 }
 
 class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    
+    // all categories in the app
     var categories:[Category]?
     var managedContext: NSManagedObjectContext?
     var appDelegate: AppDelegate?
@@ -38,8 +40,37 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
     @IBOutlet var labelB: UILabel!
     @IBOutlet var labelG: UILabel!
     
+    // init
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Change words on Navigation bar back item
+        // reference:http://www.jianshu.com/p/11eafef52e0d
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(backToPrevious))
+        
+        appDelegate = UIApplication.shared.delegate as? AppDelegate
+        managedContext = appDelegate?.persistentContainer.viewContext
+        
+        // set default value
+        labelColor.textColor = UIColor(red: 120/255, green: 120/255, blue: 120/255, alpha: 1)
+        labelR.text = String(Int(sliderR.value))
+        labelG.text = String(Int(sliderG.value))
+        labelB.text = String(Int(sliderB.value))
+    }
+    
+    // set leftBarButtonItem to have a go back function
+    func backToPrevious(){
+        self.navigationController!.popViewController(animated: true)
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    
     @IBAction func choosePhoto(_ sender: Any) {
-        // make sure access to photo library
+        // make sure access to photo library, if not, will pop up a dialog
         guard UIImagePickerController.isSourceTypeAvailable(.photoLibrary) else {
             let warnInfo = UIAlertController(title: "Warning", message: "Can not access photo library!", preferredStyle: UIAlertControllerStyle.alert)
             let okAlertAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil)
@@ -56,7 +87,7 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
         
     }
     
-    // when user choose a picture, the function will be called
+    // when user choose a picture, the function will be called, set image view attributes that image can show appropriately
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         imageView.image = info[UIImagePickerControllerOriginalImage] as? UIImage
         imageView.contentMode = .scaleAspectFill
@@ -64,36 +95,8 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
         dismiss(animated: true, completion: nil)
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Change words on Navigation bar back item
-        // reference:http://www.jianshu.com/p/11eafef52e0d
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(backToPrevious))
-        
-        appDelegate = UIApplication.shared.delegate as? AppDelegate
-        managedContext = appDelegate?.persistentContainer.viewContext
-        
-        labelColor.textColor = UIColor(red: 120/255, green: 120/255, blue: 120/255, alpha: 1)
-        labelR.text = String(Int(sliderR.value))
-        labelG.text = String(Int(sliderG.value))
-        labelB.text = String(Int(sliderB.value))
-    }
     
-    // set leftBarButtonItem to have a go back function
-    func backToPrevious(){
-        self.navigationController!.popViewController(animated: true)
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-   
+   // when click save button
     @IBAction func saveNewCategory(_ sender: Any) {
         // check if exist
         if labelName.text == "" {
@@ -104,7 +107,7 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
             showMessage(msg: "Please choose a category image")
             return
         }
-       // check if the name is exist or not
+       // check if the name is exist or not, can not be the same name
         for i in 0...(categories?.count)!-1{
             if ((categories?[i].name)!.lowercased() == labelName.text?.lowercased()) {
                 showMessage(msg: "The Name is already exist!")
@@ -121,7 +124,7 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
         category.order = Int32(categories!.count)
         appDelegate?.saveContext()
         
-        // add value to two lists
+        // add value to two lists in CategoryController
         self.mydelegate?.addCategory(category: category)
         
         // return to category page and reload
@@ -129,6 +132,7 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
         
     }
 
+    // pop up a dialog to give message to user
     func showMessage(msg:String){
         let alertController = UIAlertController(title: msg, message: nil, preferredStyle: .alert)
         self.present(alertController, animated: true, completion: nil)
@@ -137,7 +141,7 @@ class AddCategoryController: UIViewController, UIImagePickerControllerDelegate, 
         }
     }
     
-    // touch background to hide keyboard
+    // touch background to hide keyboard in real phone
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.view.endEditing(true)
     }
